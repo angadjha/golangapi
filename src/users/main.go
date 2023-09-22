@@ -21,6 +21,6 @@ func main() {
 		fmt.Println("Error checking eligibility:", err)
 		return
 	}
-
+	fmt.Printf("Users: %v", userResponse)
 	fmt.Printf("Eligible: %v, Message: %v\n", userResponse.User.Age, userResponse.User.Name)
 }
