@@ -24,3 +24,11 @@ func main() {
 	fmt.Printf("Users: %v", userResponse)
 	fmt.Printf("Eligible: %v, Message: %v\n", userResponse.User.Age, userResponse.User.Name)
 }
+
+type base struct {
+	color string
+}
+
+func (b *base) say() {
+	fmt.Printf("Hello angad")
+}
