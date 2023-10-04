@@ -1,0 +1,109 @@
+# Lambda to SOAP Integration using GoLang
+
+**Table of Contents**
+1. [Introduction](#introduction)
+2. [Prerequisites](#prerequisites)
+3. [Creating a SOAP Service in GoLang](#creating-a-soap-service-in-golang)
+4. [Invoking the SOAP Service](#invoking-the-soap-service)
+5. [Conclusion](#conclusion)
+
+## 1. Introduction
+
+Lambda to SOAP integration refers to the process of connecting an AWS Lambda function with a SOAP-based web service using the Go programming language. This integration allows you to trigger AWS Lambda functions to interact with SOAP web services, which are commonly used for communication between distributed systems.
+
+In this wiki, we will provide a step-by-step guide on how to create a SOAP service in GoLang and then invoke it from an AWS Lambda function. This example will demonstrate how to set up a simple SOAP service, generate SOAP requests and responses, and connect it with an AWS Lambda function written in GoLang.
+
+## 2. Prerequisites
+
+Before proceeding, ensure that you have the following prerequisites in place:
+
+- **AWS Account**: You need an AWS account to create and deploy AWS Lambda functions.
+- **GoLang**: Install the Go programming language on your local development environment.
+- **AWS Lambda**: Familiarize yourself with AWS Lambda and set up the necessary IAM roles and permissions.
+- **SOAP Web Service**: Have access to a SOAP-based web service that you want to integrate with.
+
+## 3. Creating a SOAP Service in GoLang
+
+To create a SOAP service in GoLang, follow these steps:
+
+1. **Set Up a GoLang Development Environment**: Ensure you have GoLang installed on your system.
+
+2. **Create a New Go Project**: Create a new directory for your Go project and initialize it with `go mod init`.
+
+3. **Define a Struct for Your SOAP Request**: Create a Go struct that represents the SOAP request parameters. Annotate the struct fields with XML tags to specify their mapping to SOAP elements.
+
+   ```go
+   type MySoapRequest struct {
+       XMLName xml.Name `xml:"Envelope"`
+       Body    struct {
+           RequestData struct {
+               // SOAP request parameters go here
+           } `xml:"RequestData"`
+       } `xml:"Body"`
+   }
+   ```
+
+4. **Define a Struct for Your SOAP Response**: Similarly, create a Go struct for the SOAP response.
+
+   ```go
+   type MySoapResponse struct {
+       XMLName xml.Name `xml:"Envelope"`
+       Body    struct {
+           ResponseData struct {
+               // SOAP response fields go here
+           } `xml:"ResponseData"`
+       } `xml:"Body"`
+   }
+   ```
+
+5. **Implement a SOAP Service**: Create an HTTP server in GoLang that listens for SOAP requests, processes them, and sends SOAP responses.
+
+   ```go
+   func MySoapHandler(w http.ResponseWriter, r *http.Request) {
+       // Parse the SOAP request
+       var request MySoapRequest
+       err := xml.NewDecoder(r.Body).Decode(&request)
+       if err != nil {
+           // Handle error
+           return
+       }
+       
+       // Process the request and prepare a SOAP response
+       var response MySoapResponse
+       // Populate response fields
+
+       // Encode the SOAP response and send it
+       w.Header().Set("Content-Type", "text/xml")
+       w.WriteHeader(http.StatusOK)
+       xml.NewEncoder(w).Encode(response)
+   }
+   ```
+
+6. **Run the SOAP Service**: Start the Go HTTP server to listen for SOAP requests on a specific port.
+
+   ```go
+   func main() {
+       http.HandleFunc("/mysoap", MySoapHandler)
+       http.ListenAndServe(":8080", nil)
+   }
+   ```
+
+7. **Deploy Your SOAP Service**: Deploy your GoLang SOAP service to a server or a cloud platform like AWS EC2, and ensure it's accessible over the internet.
+
+## 4. Invoking the SOAP Service
+
+Now that you have a SOAP service running, you can invoke it from an AWS Lambda function written in GoLang:
+
+1. **Create an AWS Lambda Function**: Using the AWS Lambda console or the AWS CLI, create a new Lambda function.
+
+2. **Write GoLang Lambda Code**: Write the GoLang code for your Lambda function. This code will include the logic to create a SOAP request, send it to the SOAP service, and process the SOAP response.
+
+3. **Package Your Lambda Function**: Package your Lambda function along with any required dependencies into a ZIP file.
+
+4. **Deploy and Test the Lambda Function**: Deploy the Lambda function and test it by invoking it manually or setting up an event trigger.
+
+## 5. Conclusion
+
+In this Wiki, we have explored the process of integrating AWS Lambda with a SOAP-based web service using the Go programming language. You learned how to create a SOAP service in GoLang, define SOAP request and response structures, and implement a SOAP server. Additionally, we discussed how to invoke the SOAP service from an AWS Lambda function.
+
+This integration enables you to automate and orchestrate processes that involve SOAP-based communication within your AWS environment, making it easier to connect AWS Lambda functions with SOAP web services for various use cases.
