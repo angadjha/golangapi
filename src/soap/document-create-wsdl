@@ -1,0 +1,136 @@
+Creating a SOAP service in Golang typically involves several steps, including setting up the server, defining the SOAP service and its methods, handling incoming SOAP requests, and sending SOAP responses. Here's a basic example of how you can create a simple SOAP service using the `github.com/hooklift/gowsdl` package, which allows you to generate Go code from a WSDL (Web Services Description Language) file. In this example, we'll create a simple calculator service with two methods: `Add` and `Subtract`.
+
+1. Install the required package:
+
+```bash
+go get github.com/hooklift/gowsdl/...
+```
+
+2. Create a WSDL file (calculator.wsdl) for your service:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:tns="http://example.com/calculator"
+             targetNamespace="http://example.com/calculator">
+    
+    <message name="AddRequest">
+        <part name="a" type="xsd:int"/>
+        <part name="b" type="xsd:int"/>
+    </message>
+    
+    <message name="AddResponse">
+        <part name="result" type="xsd:int"/>
+    </message>
+    
+    <message name="SubtractRequest">
+        <part name="a" type="xsd:int"/>
+        <part name="b" type="xsd:int"/>
+    </message>
+    
+    <message name="SubtractResponse">
+        <part name="result" type="xsd:int"/>
+    </message>
+    
+    <portType name="CalculatorPortType">
+        <operation name="Add">
+            <input message="tns:AddRequest"/>
+            <output message="tns:AddResponse"/>
+        </operation>
+        <operation name="Subtract">
+            <input message="tns:SubtractRequest"/>
+            <output message="tns:SubtractResponse"/>
+        </operation>
+    </portType>
+    
+    <binding name="CalculatorBinding" type="tns:CalculatorPortType">
+        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="Add">
+            <soap:operation soapAction="http://example.com/calculator#Add"/>
+            <input>
+                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+        <operation name="Subtract">
+            <soap:operation soapAction="http://example.com/calculator#Subtract"/>
+            <input>
+                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </input>
+            <output>
+                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+            </output>
+        </operation>
+    </binding>
+    
+    <service name="CalculatorService">
+        <port name="CalculatorPort" binding="tns:CalculatorBinding">
+            <soap:address location="http://localhost:8080/calculator"/>
+        </port>
+    </service>
+</definitions>
+```
+
+3. Generate Go code from the WSDL file:
+
+```bash
+gowsdl -o calculator.go calculator.wsdl
+```
+
+4. Create the Go server code:
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/hooklift/gowsdl/soap"
+)
+
+type Calculator struct{}
+
+func (c *Calculator) Add(request *AddRequest) (*AddResponse, error) {
+	result := request.A + request.B
+	return &AddResponse{Result: result}, nil
+}
+
+func (c *Calculator) Subtract(request *SubtractRequest) (*SubtractResponse, error) {
+	result := request.A - request.B
+	return &SubtractResponse{Result: result}, nil
+}
+
+func main() {
+	calculator := new(Calculator)
+	server := soap.NewServer()
+	server.Register(calculator)
+
+	http.Handle("/calculator", server)
+	fmt.Println("SOAP server listening on :8080...")
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+```
+
+5. Build and run the server:
+
+```bash
+go build
+./your-program-name
+```
+
+Your SOAP service should now be running at `http://localhost:8080/calculator`. You can use SOAP clients to send requests to this service to perform addition and subtraction operations.
+
+Please note that this is a basic example, and real-world SOAP services may require more complex setups and error handling. Additionally, SOAP is an older and less common technology for building web services; consider using RESTful APIs or gRPC for new projects if possible.
+
+
+
+
+
+
+========================================
