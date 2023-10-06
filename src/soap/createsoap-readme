@@ -1,129 +1,122 @@
-Creating a SOAP service in Golang typically involves several steps, including setting up the server, defining the SOAP service and its methods, handling incoming SOAP requests, and sending SOAP responses. Here's a basic example of how you can create a simple SOAP service using the `github.com/hooklift/gowsdl` package, which allows you to generate Go code from a WSDL (Web Services Description Language) file. In this example, we'll create a simple calculator service with two methods: `Add` and `Subtract`.
+Sure, here's a more detailed Wiki page content on calling SOAP services in Golang with a comprehensive example:
 
-1. Install the required package:
+---
 
-```bash
-go get github.com/hooklift/gowsdl/...
-```
+# Calling SOAP Services in Golang
 
-2. Create a WSDL file (calculator.wsdl) for your service:
+## Introduction
+
+This guide demonstrates how to call a SOAP (Simple Object Access Protocol) service using the Go programming language (Golang). SOAP is a protocol that allows for structured communication between web services. Golang, a statically typed and compiled language, provides excellent support for making HTTP requests and processing XML data, making it a suitable choice for interacting with SOAP services.
+
+In this tutorial, we'll outline the steps to create a SOAP request, send it to a SOAP service, and handle the response using Golang.
+
+## Prerequisites
+
+Before proceeding, ensure that you have the following prerequisites installed on your system:
+
+- **Go Programming Language**: Make sure you have Go installed. If not, visit the official [Go website](https://golang.org/) for instructions on installing Go.
+- **Golang Packages**: Install the necessary Go packages using the following commands:
+  ```bash
+  go get github.com/parnurzeal/gorequest
+  go get github.com/beevik/etree
+  ```
+
+## Creating a SOAP Request
+
+To interact with a SOAP service, you need to create a valid SOAP request. A SOAP request typically follows a structure involving an envelope, body, namespace, and parameters:
+
+- **Envelope**: The root element of a SOAP message.
+- **Body**: Contains the main content of the request, including the specific operation to perform.
+- **Namespace**: Defines the SOAP namespace for the request.
+- **Parameters**: Provide the necessary parameters for the SOAP operation.
+
+Here's a sample SOAP request:
 
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://schemas.xmlsoap.org/wsdl/"
-             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
-             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-             xmlns:tns="http://example.com/calculator"
-             targetNamespace="http://example.com/calculator">
-    
-    <message name="AddRequest">
-        <part name="a" type="xsd:int"/>
-        <part name="b" type="xsd:int"/>
-    </message>
-    
-    <message name="AddResponse">
-        <part name="result" type="xsd:int"/>
-    </message>
-    
-    <message name="SubtractRequest">
-        <part name="a" type="xsd:int"/>
-        <part name="b" type="xsd:int"/>
-    </message>
-    
-    <message name="SubtractResponse">
-        <part name="result" type="xsd:int"/>
-    </message>
-    
-    <portType name="CalculatorPortType">
-        <operation name="Add">
-            <input message="tns:AddRequest"/>
-            <output message="tns:AddResponse"/>
-        </operation>
-        <operation name="Subtract">
-            <input message="tns:SubtractRequest"/>
-            <output message="tns:SubtractResponse"/>
-        </operation>
-    </portType>
-    
-    <binding name="CalculatorBinding" type="tns:CalculatorPortType">
-        <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
-        <operation name="Add">
-            <soap:operation soapAction="http://example.com/calculator#Add"/>
-            <input>
-                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-            </input>
-            <output>
-                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-            </output>
-        </operation>
-        <operation name="Subtract">
-            <soap:operation soapAction="http://example.com/calculator#Subtract"/>
-            <input>
-                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-            </input>
-            <output>
-                <soap:body use="encoded" namespace="http://example.com/calculator" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-            </output>
-        </operation>
-    </binding>
-    
-    <service name="CalculatorService">
-        <port name="CalculatorPort" binding="tns:CalculatorBinding">
-            <soap:address location="http://localhost:8080/calculator"/>
-        </port>
-    </service>
-</definitions>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+    <soap:Body>
+        <YourSOAPRequest xmlns="http://example.com/">
+            <Param1>Value1</Param1>
+            <Param2>Value2</Param2>
+        </YourSOAPRequest>
+    </soap:Body>
+</soap:Envelope>
 ```
 
-3. Generate Go code from the WSDL file:
+Replace `YourSOAPRequest`, `Param1`, `Param2`, and the namespace with the appropriate values for your SOAP service.
 
-```bash
-gowsdl -o calculator.go calculator.wsdl
-```
+## Sending the SOAP Request
 
-4. Create the Go server code:
+Next, you'll send the SOAP request to the SOAP service's endpoint using an HTTP client in Go. Follow this example to achieve this:
 
 ```go
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"log"
+	"io/ioutil"
 	"net/http"
-
-	"github.com/hooklift/gowsdl/soap"
 )
 
-type Calculator struct{}
-
-func (c *Calculator) Add(request *AddRequest) (*AddResponse, error) {
-	result := request.A + request.B
-	return &AddResponse{Result: result}, nil
-}
-
-func (c *Calculator) Subtract(request *SubtractRequest) (*SubtractResponse, error) {
-	result := request.A - request.B
-	return &SubtractResponse{Result: result}, nil
-}
-
 func main() {
-	calculator := new(Calculator)
-	server := soap.NewServer()
-	server.Register(calculator)
+	// SOAP request body as a string
+	soapRequest := `
+		<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+			<soap:Body>
+				<YourSOAPRequest xmlns="http://example.com/">
+					<Param1>Value1</Param1>
+					<Param2>Value2</Param2>
+				</YourSOAPRequest>
+			</soap:Body>
+		</soap:Envelope>
+	`
 
-	http.Handle("/calculator", server)
-	fmt.Println("SOAP server listening on :8080...")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	// URL of the SOAP service endpoint
+	endpointURL := "http://example.com/soap-endpoint"
+
+	// Create an HTTP request
+	req, err := http.NewRequest("POST", endpointURL, bytes.NewBufferString(soapRequest))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	// Set SOAP headers and content type
+	req.Header.Set("Content-Type", "text/xml; charset=utf-8")
+	req.Header.Set("SOAPAction", "YourSOAPAction")
+
+	// Send the HTTP request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Println("Error sending request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// Read the response
+	responseBody, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println("Error reading response:", err)
+		return
+	}
+
+	// Print the SOAP response
+	fmt.Println("SOAP Response:", string(responseBody))
 }
 ```
 
-5. Build and run the server:
+Replace `YourSOAPRequest`, `Param1`, `Param2`, `http://example.com/`, and `http://example.com/soap-endpoint` with the specific values and endpoint URL for your SOAP service.
 
-```bash
-go build
-./your-program-name
-```
+## Handling Errors
 
-Your SOAP service should now be running at `http://localhost:8080/calculator`. You can use SOAP clients to send requests to this service to perform addition and subtraction operations.
+Ensure to handle errors gracefully, check the response status code, and process the SOAP response according to your application's requirements.
 
-Please note that this is a basic example, and real-world SOAP services may require more complex setups and error handling. Additionally, SOAP is an older and less common technology for building web services; consider using RESTful APIs or gRPC for new projects if possible.
+## Conclusion
+
+In this guide, you learned how to call a SOAP service in Go by creating a SOAP request and sending it to the service's endpoint. This enables you to interact with SOAP-based web services using the Go programming language.
+
+---
+
+Feel free to utilize and modify this content for your Wiki page, making adjustments as needed to suit your specific use case or SOAP service details.
